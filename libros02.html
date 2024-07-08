@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+   <head>
+   <title>libros con IndexedDB</title>
+   <meta charset="utf-8"/>
+<script>
+
+   window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+
+   window.IDBTransaction = window.IDBTransaction || window.mozIDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+
+   window.IDBKeyRange = window.IDBKeyRange || window.mozIDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange; 
+
+   if (!window.indexedDB) {
+      alert("Tu navegador no soporta IndexedDB");
+   } 
+
+   var db;
+   var request = window.indexedDB.open("libros002",1);
+
+   request.onsuccess = function(e) {
+      db = request.result;
+      console.log("success ",db,e.target.result);
+   }
+   request.onerror = function(e) {
+      console.log("Error al abrir la base de datos",e);
+   }
+   request.onupgradeneeded = function(e) {
+      db = e.target.result;
+      console.log("Crear el esquema",db);
+   }
+
+
+</script>
+</head>
+
+   <body>
+   <form>
+   <fieldset>
+   <label for="id">* ISDN:</label><br>
+   <input type="text" name="id" id="id" value=""><br>
+   <label for="titulo">* Título:</label><br>
+   <input type="text" name="titulo" id="titulo" size="50"><br>
+   <label for="autor">* Autor:</label><br>
+   <input type="text" name="autor" id="autor" size="50"><br>
+   <label for="paginas">* Páginas:</label><br>
+   <input type="text" name="paginas" id="paginas"><br>
+   </fieldset>
+   <button onclick="alta()">Enviar datos</button>
+   <input type="reset" value="Limpiar datos">
+   </form>
+      
+   </body>
+   <br><br>
+   <div id="salida"></div>
+</html>
