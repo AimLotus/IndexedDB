@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+   <head>
+   <title>libros con IndexedDB</title>
+   <meta charset="utf-8"/>
+<script>
+
+   window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+
+   window.IDBTransaction = window.IDBTransaction || window.mozIDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+
+   window.IDBKeyRange = window.IDBKeyRange || window.mozIDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange; 
+
+   if (!window.indexedDB) {
+      alert("Tu navegador no soporta IndexedDB");
+   } 
+
+   var db;
+   var request = window.indexedDB.open("libros002",1);
+
+   request.onsuccess = function(e) {
+      db = request.result;
+      console.log("success ",db);
+      leeLibros();
+   }
+   request.onerror = function(e) {
+      console.log("Error al abrir la base de datos",e);
+   }
+   request.onupgradeneeded = function(e) {
+      db = e.target.result;
+      console.log("Crear el esquema",db);
+      var opciones = {keyPath:"id",autoIncrement:true};
+      var objectStorage = db.createObjectStore("libro",opciones)
+   }
+   function alta() {
+      var id = document.getElementById("id").value;
+      var titulo = document.getElementById("titulo").value;
+      var autor = document.getElementById("autor").value;
+      var pag = document.getElementById("paginas").value;
+      if(id==""){
+         alert("El ISDN no puede ser vacío");
+      } else if(titulo==""){
+         alert("El titulo no puede ser vacío");
+      } else if(autor==""){
+         alert("El autor no puede ser vacío");
+      } else if(pag==""){
+         alert("Las páginas no puede estar vacías");
+      } else {
+         var tx = db.transaction(["libro"],"readwrite");
+         var objectStore = tx.objectStore("libro");
+         var request = objectStore.add({id:id, autor:autor, titulo:titulo, pag:pag});
+
+         request.onsuccess = function(e) {
+            console.log(e);
+            alert("Se insertó el registro correctamente");
+            document.getElementById("id").value="";
+            document.getElementById("titulo").value="";
+            document.getElementById("autor").value="";
+            document.getElementById("paginas").value="";
+            //
+            leeLibros();
+         }
+
+         request.onerror = function(e) {
+            console.log(e);
+            alert("Error al insertar los datos");
+            // body...
+         }
+      }
+   }
+   function leeLibros() {
+      //Realizamos una cadena
+      var cadena = "<table border='1'>"
+      cadena += "<tr><th>ISDN</th><th>Título</th><th>Autor</th><th>Páginas</th><th>Modificar</th><th>Borrar</th></tr>";
+      var num = 0;
+      var ids_array = new Array();
+      //Leer nuestro cursor
+      var objectStore = db.transaction("libro").objectStore("libro");
+      objectStore.openCursor().onsuccess = function(e) {
+         var cursor = e.target.result;
+         if (cursor) {
+            id=cursor.value.id;
+            cadena += "<tr>";
+            cadena += "<td>"+cursor.value.id+"</td>";
+            cadena += "<td>"+cursor.value.titulo+"</td>";
+            cadena += "<td>"+cursor.value.autor+"</td>";
+            cadena += "<td>"+cursor.value.pag+"</td>";
+            cadena += "<td><button id='m"+id+"'>Modificar</button></td>";
+            cadena += "<td><button id='b"+id+"'>Borrar</button></td>";
+            cadena += "</tr>";
+            ids_array.push(id);
+            num++;
+            //Continuamos con el siguiente objeto
+            cursor.continue();
+         } else {
+            cadena += "</table>";
+            document.getElementById("salida").innerHTML = cadena;
+            //
+            for (var i=0; i<ids_array.length; i++) {
+               id = ids_array[i];
+               document.getElementById("m"+id).onclick = modifica;
+               document.getElementById("b"+id).onclick = borra;
+            }
+
+         }
+      }
+
+
+
+   }
+
+
+</script>
+</head>
+
+   <body>
+   <form>
+   <fieldset>
+   <label for="id">* ISDN:</label><br>
+   <input type="text" name="id" id="id" value=""><br>
+   <label for="titulo">* Título:</label><br>
+   <input type="text" name="titulo" id="titulo" size="50"><br>
+   <label for="autor">* Autor:</label><br>
+   <input type="text" name="autor" id="autor" size="50"><br>
+   <label for="paginas">* Páginas:</label><br>
+   <input type="text" name="paginas" id="paginas"><br>
+   </fieldset>
+   <button onclick="alta()">Enviar datos</button>
+   <input type="reset" value="Limpiar datos">
+   </form>
+      
+   </body>
+   <br><br>
+   <div id="salida"></div>
+</html>
